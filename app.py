@@ -10,7 +10,7 @@ import yt_dlp
 import re
 
 app = Flask(__name__)
-CORS(app)  # Frontend ke liye CORS allow karo
+CORS(app, origins="*", allow_headers=["Content-Type"], methods=["GET", "POST", "OPTIONS"])
 
 # ─── YouTube URL validate ───────────────────────────────────────────────────
 def is_yt_url(url: str) -> bool:
