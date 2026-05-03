@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AK Tool — YouTube Downloader</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@400;600&display=swap" rel="stylesheet"/>
+  <style>
+    :root{--bg:#0d0d0d;--card:#181818;--border:#2a2a2a;--red:#e5173f;--red-dark:#9c0f2a;--red-glow:rgba(229,23,63,0.18);--text:#f0f0f0;--muted:#888;}
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{background:var(--bg);color:var(--text);font-family:'Rajdhani',sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;}
+    header{width:100%;background:linear-gradient(90deg,#0d0d0d,#1a0a10,#0d0d0d);border-bottom:1px solid var(--border);padding:18px 24px;display:flex;align-items:center;gap:14px;}
+    .logo{width:42px;height:42px;background:var(--red);border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:'Orbitron',monospace;font-size:14px;font-weight:900;color:#fff;box-shadow:0 0 16px var(--red-glow);flex-shrink:0;}
+    .logo-text h1{font-family:'Orbitron',monospace;font-size:18px;letter-spacing:2px;}
+    .logo-text p{font-size:12px;color:var(--muted);letter-spacing:1px;}
+    .tabs{display:flex;gap:6px;padding:18px 0 0;flex-wrap:wrap;justify-content:center;}
+    .tab{background:var(--card);border:1px solid var(--border);color:var(--muted);padding:7px 16px;border-radius:20px;font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;}
+    .tab.active,.tab:hover{background:var(--red);border-color:var(--red);color:#fff;box-shadow:0 0 12px var(--red-glow);}
+    .main{width:100%;max-width:780px;padding:28px 20px 60px;}
+    .search-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:28px;margin-bottom:24px;}
+    .search-title{font-family:'Orbitron',monospace;font-size:22px;margin-bottom:6px;}
+    .search-sub{font-size:14px;color:var(--muted);margin-bottom:20px;}
+    .input-row{display:flex;gap:10px;}
+    #urlInput{flex:1;background:#111;border:1px solid var(--border);border-radius:10px;padding:12px 16px;color:var(--text);font-family:'Rajdhani',sans-serif;font-size:15px;outline:none;transition:border-color .2s;}
+    #urlInput:focus{border-color:var(--red);}
+    #urlInput::placeholder{color:#444;}
+    #fetchBtn{background:var(--red);border:none;border-radius:10px;padding:12px 22px;color:#fff;font-family:'Orbitron',monospace;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;white-space:nowrap;}
+    #fetchBtn:hover{background:#c0102f;box-shadow:0 0 18px var(--red-glow);}
+    #fetchBtn:disabled{opacity:.5;cursor:not-allowed;}
+    .result-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px 28px;display:none;}
+    .result-card.show{display:block;}
+    .video-meta{display:flex;gap:16px;margin-bottom:24px;align-items:center;}
+    .thumb{width:100px;height:65px;border-radius:10px;object-fit:cover;border:1px solid var(--border);flex-shrink:0;}
+    .thumb-placeholder{width:100px;height:65px;border-radius:10px;background:#222;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:26px;flex-shrink:0;}
+    .meta-info h3{font-size:15px;font-weight:600;margin-bottom:6px;line-height:1.4;}
+    .badge{display:inline-flex;align-items:center;gap:5px;background:var(--red-dark);color:#fca5a5;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;}
+    .section-title{font-size:13px;font-weight:700;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:12px;}
+    .quality-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:22px;}
+    .dl-btn{background:#1f1f1f;border:1px solid var(--border);border-radius:12px;padding:14px 16px;color:var(--text);cursor:pointer;transition:all .2s;text-align:left;font-family:'Rajdhani',sans-serif;display:block;width:100%;}
+    .dl-btn:hover:not(:disabled){border-color:var(--red);background:#2a1015;box-shadow:0 0 12px var(--red-glow);}
+    .dl-btn:disabled{opacity:.55;cursor:not-allowed;}
+    .ql{font-size:16px;font-weight:700;display:flex;align-items:center;gap:8px;margin-bottom:4px;}
+    .hd-badge{background:var(--red);color:#fff;font-size:9px;padding:2px 5px;border-radius:4px;font-weight:900;font-family:'Orbitron',monospace;letter-spacing:1px;}
+    .qs{font-size:12px;color:var(--muted);}
+    .audio-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+    .audio-btn{background:#1a0a10;border:1px solid var(--red-dark);border-radius:12px;padding:14px 16px;color:var(--text);cursor:pointer;transition:all .2s;text-align:left;font-family:'Rajdhani',sans-serif;display:flex;align-items:center;gap:12px;width:100%;}
+    .audio-btn:hover:not(:disabled){border-color:var(--red);box-shadow:0 0 12px var(--red-glow);}
+    .audio-btn:disabled{opacity:.55;cursor:not-allowed;}
+    .audio-icon{width:36px;height:36px;background:var(--red);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+    .progress-wrap{margin-top:18px;display:none;}
+    .progress-wrap.show{display:block;}
+    .progress-label{font-size:13px;color:var(--muted);margin-bottom:8px;}
+    .progress-bar-bg{background:#222;border-radius:20px;height:8px;overflow:hidden;}
+    .progress-bar-fill{background:var(--red);height:100%;border-radius:20px;transition:width .4s;width:0%;}
+    .error-box{background:#1a0a10;border:1px solid var(--red-dark);border-radius:10px;padding:12px 16px;color:#fca5a5;font-size:14px;display:none;align-items:center;gap:8px;margin-top:14px;}
+    .error-box.show{display:flex;}
+    .loader{display:none;align-items:center;gap:10px;color:var(--muted);font-size:14px;padding:14px 0;}
+    .loader.show{display:flex;}
+    .spinner{width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--red);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+    .how-section{margin-top:36px;text-align:center;}
+    .how-section h2{font-family:'Orbitron',monospace;font-size:20px;margin-bottom:24px;}
+    .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+    .step{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:22px 16px;}
+    .step-num{width:38px;height:38px;background:var(--red);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Orbitron',monospace;font-size:16px;font-weight:900;margin:0 auto 12px;}
+    .step h4{font-size:15px;font-weight:700;margin-bottom:6px;}
+    .step p{font-size:13px;color:var(--muted);}
+    .server-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:#888;background:#111;border:1px solid #333;border-radius:20px;padding:2px 10px;margin-left:10px;}
+    .server-badge.ok{color:#4ade80;border-color:#166534;}
+    .server-badge.err{color:#fca5a5;border-color:#7f1d1d;}
+    @media(max-width:600px){.steps{grid-template-columns:1fr;}.audio-grid{grid-template-columns:1fr;}.input-row{flex-direction:column;}.video-meta{flex-direction:column;align-items:flex-start;}}
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">AK</div>
+  <div class="logo-text">
+    <h1>AK TOOL <span id="serverStatus" class="server-badge">● checking…</span></h1>
+    <p>YouTube Downloader</p>
+  </div>
+</header>
+
+<div class="tabs">
+  <button class="tab active">MP4 1080p</button>
+  <button class="tab">MP4 720p</button>
+  <button class="tab">MP4 480p</button>
+  <button class="tab">MP3 Audio</button>
+  <button class="tab">No Watermark</button>
+</div>
+
+<div class="main">
+  <div class="search-card">
+    <h2 class="search-title">Download YouTube Video</h2>
+    <p class="search-sub">YouTube link paste karein aur quality choose karein</p>
+    <div class="input-row">
+      <input id="urlInput" type="text" placeholder="https://www.youtube.com/watch?v=..."/>
+      <button id="fetchBtn" onclick="fetchVideo()">⬇ GET</button>
+    </div>
+    <div class="loader" id="loader"><div class="spinner"></div><span id="loaderTxt">Load ho raha hai…</span></div>
+    <div class="error-box" id="errBox"></div>
+  </div>
+
+  <div class="result-card" id="resultCard">
+    <div class="video-meta">
+      <div class="thumb-placeholder" id="thumbPh">🎬</div>
+      <img id="thumb" class="thumb" src="" alt="" style="display:none"
+           onerror="this.style.display='none';document.getElementById('thumbPh').style.display='flex'"/>
+      <div class="meta-info">
+        <h3 id="videoTitle">YouTube Video</h3>
+        <div class="badge">▶ YouTube Video</div>
+      </div>
+    </div>
+
+    <div class="section-title">⬇ DOWNLOAD VIDEO</div>
+    <div class="quality-grid" id="videoGrid"></div>
+
+    <div class="section-title">♫ DOWNLOAD AUDIO ONLY</div>
+    <div class="audio-grid" id="audioGrid"></div>
+
+    <div class="progress-wrap" id="progressWrap">
+      <div class="progress-label" id="progressLabel">Processing…</div>
+      <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressFill"></div></div>
+    </div>
+  </div>
+
+  <div class="how-section">
+    <h2>How It Works</h2>
+    <div class="steps">
+      <div class="step"><div class="step-num">1</div><h4>Paste Link</h4><p>YouTube URL copy karke upar paste karein</p></div>
+      <div class="step"><div class="step-num">2</div><h4>Quality Choose Karein</h4><p>Video ya audio quality select karein</p></div>
+      <div class="step"><div class="step-num">3</div><h4>Download</h4><p>Button dabayein — file save ho jayegi</p></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Backend URL ─────────────────────────────────────────────────────────────
+const BACKEND ="aktools-production-6fab.up.railway.app";
+
+// ── Server health check ──────────────────────────────────────────────────────
+async function checkServer(){
+  const el = document.getElementById("serverStatus");
+  try{
+    const r = await fetch(BACKEND+"/api/health",{signal:AbortSignal.timeout(4000)});
+    if(r.ok){ el.textContent="● Server Online"; el.className="server-badge ok"; return true; }
+  }catch{}
+  el.textContent="● Server Offline"; el.className="server-badge err";
+  return false;
+}
+checkServer();
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+function showErr(m){const b=document.getElementById("errBox");b.innerHTML="✕ &nbsp;"+m;b.classList.add("show");b.removeAttribute("style");}
+function hideErr(){document.getElementById("errBox").classList.remove("show");}
+function setLoad(on,txt){
+  document.getElementById("loader").classList.toggle("show",on);
+  if(txt)document.getElementById("loaderTxt").textContent=txt;
+  document.getElementById("fetchBtn").disabled=on;
+}
+function setProgress(pct,txt){
+  document.getElementById("progressWrap").classList.add("show");
+  document.getElementById("progressFill").style.width=pct+"%";
+  document.getElementById("progressLabel").textContent=txt;
+}
+function hideProgress(){document.getElementById("progressWrap").classList.remove("show");}
+function fmtSize(bytes){
+  if(!bytes) return "";
+  if(bytes>1e9) return (bytes/1e9).toFixed(1)+"GB";
+  if(bytes>1e6) return (bytes/1e6).toFixed(0)+"MB";
+  return (bytes/1e3).toFixed(0)+"KB";
+}
+
+// ── Main fetch ───────────────────────────────────────────────────────────────
+let videoData = null;
+
+async function fetchVideo(){
+  const url=document.getElementById("urlInput").value.trim();
+  if(!url){showErr("YouTube URL daalo pehle!");return;}
+  if(!/youtu/.test(url)){showErr("Sirf YouTube links kaam karte hain.");return;}
+  hideErr(); hideProgress();
+  document.getElementById("resultCard").classList.remove("show");
+  setLoad(true,"Video info aa rahi hai…");
+
+  const serverOk = await checkServer();
+  if(!serverOk){
+    setLoad(false);
+    showErr("Backend server chal nahi raha! Terminal mein <b>python app.py</b> run karein.");
+    return;
+  }
+
+  try{
+    const res  = await fetch(`${BACKEND}/api/info?url=${encodeURIComponent(url)}`,
+                             {signal:AbortSignal.timeout(40000)});
+    const data = await res.json();
+    if(!res.ok) throw new Error(data.error || "Server error");
+
+    videoData = data;
+
+    // Thumbnail
+    if(data.thumbnail){
+      const img=document.getElementById("thumb");
+      img.src=data.thumbnail; img.style.display="block";
+      document.getElementById("thumbPh").style.display="none";
+    }
+    document.getElementById("videoTitle").textContent = data.title || "YouTube Video";
+
+    buildVideoButtons(data.videos || []);
+    buildAudioButtons(data.audios || []);
+    setLoad(false);
+    document.getElementById("resultCard").classList.add("show");
+
+  } catch(e){
+    setLoad(false);
+    showErr(e.message || "Error aa gaya. Dobara try karein.");
+  }
+}
+
+// ── Build Video Buttons ──────────────────────────────────────────────────────
+function buildVideoButtons(videos){
+  const grid = document.getElementById("videoGrid");
+  if(!videos.length){
+    grid.innerHTML='<p style="color:var(--muted);font-size:13px">Video streams nahi mili.</p>';
+    return;
+  }
+  grid.innerHTML = videos.map((v,i) => {
+    const isHD  = parseInt(v.quality) >= 1080;
+    const size  = fmtSize(v.filesize);
+    const note  = v.has_audio ? "" : " <span style='font-size:10px;color:#f97316'>(video only)</span>";
+    return `<button class="dl-btn" onclick="downloadStream(${i},'video')">
+      <div class="ql">${v.quality}${isHD?'<span class="hd-badge">HD</span>':''}${note}</div>
+      <div class="qs">⬇ MP4${size?' · '+size:''}</div>
+    </button>`;
+  }).join("");
+}
+
+// ── Build Audio Buttons ──────────────────────────────────────────────────────
+function buildAudioButtons(audios){
+  const grid = document.getElementById("audioGrid");
+  if(!audios.length){
+    grid.innerHTML='<p style="color:var(--muted);font-size:13px">Audio streams nahi mili.</p>';
+    return;
+  }
+  grid.innerHTML = audios.map((a,i) => {
+    const size = fmtSize(a.filesize);
+    return `<button class="audio-btn" onclick="downloadStream(${i},'audio')">
+      <div class="audio-icon">♪</div>
+      <div>
+        <div style="font-size:15px;font-weight:700">${a.label}</div>
+        <div style="font-size:12px;color:var(--muted)">${size || 'Audio Only'}</div>
+      </div>
+    </button>`;
+  }).join("");
+}
+
+// ── Download ─────────────────────────────────────────────────────────────────
+function downloadStream(index, type){
+  if(!videoData) return;
+  const stream = type==="video" ? videoData.videos[index] : videoData.audios[index];
+  if(!stream || !stream.url){ showErr("Download URL nahi mili."); return; }
+
+  setProgress(80,"Download shuru ho rahi hai…");
+  const title = (videoData.title || "video").replace(/[\\/:*?"<>|]/g,"_");
+  const ext   = stream.ext || (type==="audio"?"m4a":"mp4");
+  const fname = title + "." + ext;
+
+  const a = document.createElement("a");
+  a.href = stream.url;
+  a.download = fname;
+  a.target   = "_blank";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(()=>setProgress(100,"✓ File download ho rahi hai!"), 400);
+}
+
+document.getElementById("urlInput").addEventListener("keydown",e=>{if(e.key==="Enter")fetchVideo();});
+</script>
+</body>
+</html>
